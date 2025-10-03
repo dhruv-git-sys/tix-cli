@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import List, Optional
 from tix.models import Task
 
-
 class TaskStorage:
     """JSON-based storage for tasks with context support"""
 
@@ -103,17 +102,24 @@ class TaskStorage:
         data["tasks"] = [task.to_dict() for task in tasks]
         self._write_data(data)
 
-    def add_task(self, text: str, priority: str = 'medium', tags: List[str] = None, is_global: bool = False) -> Task:
+    def add_task(self, text: str, priority: str = 'medium', tags: List[str] = None, is_global: bool = False, estimate: int = None) -> Task:
         """Add a new task and return it"""
         data = self._read_data()
         new_id = data["next_id"]
-        new_task = Task(id=new_id, text=text, priority=priority, tags=tags or [], is_global=is_global)
+        new_task = Task(
+            id=new_id, 
+            text=text, 
+            priority=priority, 
+            tags=tags or [], 
+            is_global=is_global,
+            estimate=estimate
+        )
         
         # Global tasks can only be added in the default context
         if is_global and self.context != "default":
             # Add to default context instead
             default_storage = TaskStorage(context="default")
-            return default_storage.add_task(text, priority, tags, is_global=True)
+            return default_storage.add_task(text, priority, tags, is_global=True, estimate=estimate)
         
         data["tasks"].append(new_task.to_dict())
         data["next_id"] = new_id + 1
